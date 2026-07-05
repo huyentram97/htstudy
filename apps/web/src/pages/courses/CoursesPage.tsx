@@ -1,7 +1,7 @@
 import { Row, Col, Card, Input, Select, Tag, Typography, Button, Progress } from 'antd';
 import { SearchOutlined, LockOutlined, StarOutlined } from '@ant-design/icons';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Meta } = Card;
 
 function CoursesPage() {
