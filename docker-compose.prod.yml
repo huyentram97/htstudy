@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # ==================== API ====================
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: htstudy-api
+    restart: always
+    env_file: ./apps/api/.env.production
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - htstudy-network
+
+  # ==================== FRONTEND ====================
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: htstudy-web
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - htstudy-network
+
+  # ==================== DATABASE ====================
+  postgres:
+    image: postgres:15-alpine
+    container_name: htstudy-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: htstudy
+      POSTGRES_USER: htstudy
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_in_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U htstudy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - htstudy-network
+
+  # ==================== CACHE ====================
+  redis:
+    image: redis:7-alpine
+    container_name: htstudy-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev_pass}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - htstudy-network
+
+  # ==================== SEARCH ====================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: htstudy-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - htstudy-network
+
+  # ==================== MESSAGE QUEUE ====================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: htstudy-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: htstudy
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-change_me}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - htstudy-network
+
+  # ==================== OBJECT STORAGE ====================
+  minio:
+    image: minio/minio:latest
+    container_name: htstudy-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-htstudy}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-change_me}
+    volumes:
+      - minio_data:/data
+    networks:
+      - htstudy-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  rabbitmq_data:
+  minio_data:
+
+networks:
+  htstudy-network:
+    driver: bridge

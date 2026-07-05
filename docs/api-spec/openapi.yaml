@@ -1,0 +1,1425 @@
+openapi: 3.0.3
+info:
+  title: H-T.Study eLearning Platform API
+  version: 1.0.0
+  description: |
+    API specification cho nền tảng H-T.Study eLearning.
+    Hỗ trợ Learning Management, Exam Practice, Gamification, AI Services, Administration.
+  contact:
+    email: support@htstudy.vn
+
+servers:
+  - url: /api/v1
+    description: API Version 1
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer, example: 1 }
+        pageSize: { type: integer, example: 20 }
+        total: { type: integer, example: 150 }
+        totalPages: { type: integer, example: 8 }
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string, example: "VALIDATION_ERROR" }
+            message: { type: string, example: "Email is required" }
+            timestamp: { type: string, format: date-time }
+
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data: { type: object }
+        meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string, minLength: 3, maxLength: 50 }
+        email: { type: string, format: email, maxLength: 254 }
+        fullName: { type: string, minLength: 1, maxLength: 100 }
+        phone: { type: string, maxLength: 15 }
+        avatarUrl: { type: string, format: uri }
+        status: { type: string, enum: [active, inactive, locked] }
+        roles: { type: array, items: { $ref: '#/components/schemas/RoleSummary' } }
+        createdAt: { type: string, format: date-time }
+
+    UserCreate:
+      type: object
+      required: [username, email, fullName]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 50, pattern: '^[a-zA-Z0-9_]+$' }
+        email: { type: string, format: email }
+        fullName: { type: string, minLength: 1, maxLength: 100 }
+        phone: { type: string, minLength: 7, maxLength: 15 }
+        password: { type: string, minLength: 8 }
+        roleIds: { type: array, items: { type: string, format: uuid } }
+        groupIds: { type: array, items: { type: string, format: uuid } }
+
+    RoleSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+
+    Role:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        isSystem: { type: boolean }
+        permissions: { type: array, items: { $ref: '#/components/schemas/Permission' } }
+
+    Permission:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        resource: { type: string }
+        action: { type: string, enum: [create, read, update, delete] }
+
+    Group:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        memberCount: { type: integer }
+
+    Course:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subjectId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        thumbnailUrl: { type: string, format: uri }
+        status: { type: string, enum: [draft, pending_review, published, rejected] }
+        accessType: { type: string, enum: [free, locked, premium] }
+        pointCost: { type: integer }
+        version: { type: integer }
+        createdBy: { $ref: '#/components/schemas/UserSummary' }
+        chaptersCount: { type: integer }
+        publishedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+
+    UserSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        avatarUrl: { type: string }
+
+    CourseCreate:
+      type: object
+      required: [title, subjectId]
+      properties:
+        title: { type: string, maxLength: 300 }
+        subjectId: { type: string, format: uuid }
+        description: { type: string }
+        accessType: { type: string, enum: [free, locked, premium] }
+        pointCost: { type: integer, minimum: 0 }
+
+    Chapter:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        courseId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        sortOrder: { type: integer }
+        accessType: { type: string, enum: [free, locked, premium] }
+        lessonsCount: { type: integer }
+
+    Lesson:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        chapterId: { type: string, format: uuid }
+        title: { type: string }
+        contentType: { type: string, enum: [text, slide, video, mixed] }
+        durationMinutes: { type: integer }
+        sortOrder: { type: integer }
+        slides: { type: array, items: { $ref: '#/components/schemas/Slide' } }
+
+    Slide:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slideNumber: { type: integer }
+        title: { type: string }
+        content: { type: object }
+        voiceUrl: { type: string, format: uri }
+        voiceDurationSeconds: { type: integer }
+
+    Question:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        subjectId: { type: string, format: uuid }
+        certificationId: { type: string, format: uuid }
+        questionType: { type: string, enum: [single_choice, multiple_choice] }
+        content: { type: string, maxLength: 5000 }
+        options:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              text: { type: string }
+              isCorrect: { type: boolean }
+        explanation: { type: string, maxLength: 2000 }
+        difficulty: { type: string, enum: [easy, medium, hard] }
+        tags: { type: array, items: { type: string }, maxItems: 10 }
+        isAiGenerated: { type: boolean }
+        status: { type: string, enum: [draft, approved, rejected] }
+
+    Exam:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        subjectId: { type: string, format: uuid }
+        certificationId: { type: string, format: uuid }
+        timeLimitMinutes: { type: integer, minimum: 1, maximum: 480 }
+        passingScore: { type: integer, minimum: 0, maximum: 100 }
+        randomizeQuestions: { type: boolean }
+        shuffleAnswers: { type: boolean }
+        questionCount: { type: integer }
+        accessType: { type: string, enum: [free, locked, premium] }
+        pointCost: { type: integer }
+
+    ExamAttempt:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        examId: { type: string, format: uuid }
+        score: { type: integer }
+        passed: { type: boolean }
+        durationSeconds: { type: integer }
+        answers:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId: { type: string, format: uuid }
+              selectedOptions: { type: array, items: { type: string } }
+              isCorrect: { type: boolean }
+        startedAt: { type: string, format: date-time }
+        submittedAt: { type: string, format: date-time }
+
+    FlashcardSet:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        subjectId: { type: string, format: uuid }
+        cardCount: { type: integer }
+        studyProgress:
+          type: object
+          properties:
+            knownCount: { type: integer }
+            reviewCount: { type: integer }
+            totalCards: { type: integer }
+
+    GamificationPoints:
+      type: object
+      properties:
+        totalPoints: { type: integer }
+        availablePoints: { type: integer }
+        currentLevel: { type: integer }
+        currentStreak: { type: integer }
+        longestStreak: { type: integer }
+        comboProgress:
+          type: object
+          properties:
+            elapsedMinutes: { type: integer }
+            nextMilestone: { type: integer }
+
+    PointTransaction:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [earn, spend] }
+        amount: { type: integer }
+        reason: { type: string }
+        balanceAfter: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank: { type: integer }
+        userId: { type: string, format: uuid }
+        fullName: { type: string }
+        avatarUrl: { type: string }
+        points: { type: integer }
+        level: { type: integer }
+
+    Badge:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        iconUrl: { type: string }
+        criteriaType: { type: string }
+        criteriaValue: { type: integer }
+        earnedAt: { type: string, format: date-time }
+
+    DailyMission:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        missionType: { type: string, enum: [complete_lesson, quiz_correct, study_duration, review_flashcard] }
+        targetValue: { type: integer }
+        currentValue: { type: integer }
+        bonusPoints: { type: integer }
+        status: { type: string, enum: [active, completed, expired] }
+
+    LearningProgress:
+      type: object
+      properties:
+        courseId: { type: string, format: uuid }
+        courseTitle: { type: string }
+        progressPercentage: { type: integer, minimum: 0, maximum: 100 }
+        currentLesson: { type: string }
+        currentChapter: { type: string }
+        timeSpentSeconds: { type: integer }
+        lastAccessedAt: { type: string, format: date-time }
+        status: { type: string, enum: [not_started, in_progress, completed] }
+
+    LearningPath:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        totalSteps: { type: integer }
+        certifications: { type: array, items: { type: string } }
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              stepOrder: { type: integer }
+              entityType: { type: string, enum: [course, chapter, exam] }
+              entityId: { type: string, format: uuid }
+              title: { type: string }
+              status: { type: string, enum: [locked, current, completed] }
+
+    AIChatMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        referencedMaterials:
+          type: array
+          items:
+            type: object
+            properties:
+              entityType: { type: string }
+              entityId: { type: string, format: uuid }
+              title: { type: string }
+              contentType: { type: string }
+              relevanceSummary: { type: string }
+              isAccessible: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [achievement, content, workflow, system] }
+        title: { type: string }
+        body: { type: string }
+        isRead: { type: boolean }
+        data: { type: object }
+        createdAt: { type: string, format: date-time }
+
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        username: { type: string }
+        actionType: { type: string, enum: [create, update, delete, access, login, logout] }
+        resourceType: { type: string }
+        resourceId: { type: string, format: uuid }
+        ipAddress: { type: string }
+        previousValue: { type: object }
+        newValue: { type: object }
+        createdAt: { type: string, format: date-time }
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Initiate SSO/OIDC login
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirectUri: { type: string, format: uri }
+      responses:
+        '200':
+          description: Login redirect URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: object, properties: { loginUrl: { type: string } } }
+
+  /auth/callback:
+    post:
+      tags: [Authentication]
+      summary: OIDC callback - exchange code for JWT
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code: { type: string }
+                state: { type: string }
+      responses:
+        '200':
+          description: JWT tokens issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      accessToken: { type: string }
+                      refreshToken: { type: string }
+                      expiresIn: { type: integer }
+                      user: { $ref: '#/components/schemas/User' }
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh JWT token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New tokens issued
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout current session
+      responses:
+        '200': { description: Session invalidated }
+
+  /auth/logout-all:
+    post:
+      tags: [Authentication]
+      summary: Admin - invalidate all sessions for a user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        '200': { description: All sessions invalidated }
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/User' }
+
+  # ==================== USERS ====================
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (Admin)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, inactive, locked] }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: roleId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: User list with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/User' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Users]
+      summary: Create user (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: User details }
+    put:
+      tags: [Users]
+      summary: Update user (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: User updated }
+    delete:
+      tags: [Users]
+      summary: Delete user (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: User deleted }
+
+  /users/{id}/status:
+    patch:
+      tags: [Users]
+      summary: Change user status (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, inactive, locked] }
+      responses:
+        '200': { description: Status updated }
+
+  /users/import:
+    post:
+      tags: [Users]
+      summary: Bulk import users via CSV (Admin)
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: Import result summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      totalRows: { type: integer }
+                      imported: { type: integer }
+                      failed: { type: integer }
+                      errors: { type: array, items: { type: object } }
+
+  # ==================== ROLES & PERMISSIONS ====================
+  /roles:
+    get:
+      tags: [Roles]
+      summary: List all roles
+      responses:
+        '200': { description: Role list }
+    post:
+      tags: [Roles]
+      summary: Create custom role (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                permissionIds: { type: array, items: { type: string, format: uuid } }
+      responses:
+        '201': { description: Role created }
+
+  /roles/{id}/permissions:
+    put:
+      tags: [Roles]
+      summary: Update role permissions (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissionIds: { type: array, items: { type: string, format: uuid } }
+      responses:
+        '200': { description: Permissions updated }
+
+  /permissions:
+    get:
+      tags: [Roles]
+      summary: List all permissions
+      responses:
+        '200': { description: Permission list }
+
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups
+      responses:
+        '200': { description: Group list }
+    post:
+      tags: [Groups]
+      summary: Create group (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        '201': { description: Group created }
+
+  /groups/{id}/members:
+    put:
+      tags: [Groups]
+      summary: Update group members (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIds: { type: array, items: { type: string, format: uuid } }
+      responses:
+        '200': { description: Members updated }
+
+  # ==================== COURSES ====================
+  /courses:
+    get:
+      tags: [Learning]
+      summary: List courses
+      parameters:
+        - name: subjectId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, pending_review, published, rejected] }
+        - name: accessType
+          in: query
+          schema: { type: string, enum: [free, locked, premium] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200': { description: Course list with pagination }
+    post:
+      tags: [Learning]
+      summary: Create course (Maker)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CourseCreate' }
+      responses:
+        '201': { description: Course created }
+
+  /courses/{id}:
+    get:
+      tags: [Learning]
+      summary: Get course detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Course detail with chapters }
+    put:
+      tags: [Learning]
+      summary: Update course (Maker)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Course updated }
+
+  /courses/{id}/submit:
+    post:
+      tags: [Learning]
+      summary: Submit course for review (Maker)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Submitted for review }
+
+  /courses/{id}/approve:
+    post:
+      tags: [Learning]
+      summary: Approve and publish course (Checker)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Course published }
+
+  /courses/{id}/reject:
+    post:
+      tags: [Learning]
+      summary: Reject course (Checker)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 10 }
+      responses:
+        '200': { description: Course rejected }
+
+  # ==================== AI SERVICES ====================
+  /ai/chat:
+    post:
+      tags: [AI]
+      summary: Send message to AI Chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string, maxLength: 2000 }
+                sessionId: { type: string, format: uuid }
+                contextType: { type: string, enum: [lesson, general, material_search] }
+                contextEntityId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: AI response with optional material references
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/AIChatMessage' }
+
+  /ai/explain:
+    post:
+      tags: [AI]
+      summary: AI explain selected text
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, lessonId]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 1000 }
+                lessonId: { type: string, format: uuid }
+      responses:
+        '200': { description: AI explanation }
+
+  /ai/search-materials:
+    post:
+      tags: [AI]
+      summary: AI search related learning materials (Req 42)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, maxLength: 2000 }
+                sessionId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: AI answer with referenced materials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      answer: { type: string }
+                      materials:
+                        type: array
+                        maxItems: 10
+                        items:
+                          type: object
+                          properties:
+                            entityType: { type: string }
+                            entityId: { type: string, format: uuid }
+                            title: { type: string }
+                            contentType: { type: string }
+                            relevanceSummary: { type: string }
+                            relevanceScore: { type: number }
+                            isAccessible: { type: boolean }
+
+  /ai/generate-slides:
+    post:
+      tags: [AI]
+      summary: Generate slides from content (async)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              properties:
+                lessonId: { type: string, format: uuid }
+      responses:
+        '202':
+          description: Task accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: object, properties: { taskId: { type: string, format: uuid } } }
+
+  /ai/generate-voice:
+    post:
+      tags: [AI]
+      summary: Generate voice narration for slides (async)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              properties:
+                lessonId: { type: string, format: uuid }
+                language: { type: string, default: vi }
+      responses:
+        '202': { description: Task accepted }
+
+  /ai/generate-quiz:
+    post:
+      tags: [AI]
+      summary: Generate quiz from content (async)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              properties:
+                lessonId: { type: string, format: uuid }
+                questionCount: { type: integer, minimum: 3, maximum: 10 }
+      responses:
+        '202': { description: Task accepted }
+
+  /ai/recommendations:
+    get:
+      tags: [AI]
+      summary: Get personalized course recommendations
+      responses:
+        '200':
+          description: Recommended courses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        course: { $ref: '#/components/schemas/Course' }
+                        explanation: { type: string, maxLength: 150 }
+
+  /ai/tasks/{id}:
+    get:
+      tags: [AI]
+      summary: Check AI task status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Task status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      taskId: { type: string, format: uuid }
+                      taskType: { type: string }
+                      status: { type: string, enum: [queued, processing, completed, failed] }
+                      progress: { type: integer }
+                      result: { type: object }
+                      errorMessage: { type: string }
+
+  # ==================== GAMIFICATION ====================
+  /gamification/points:
+    get:
+      tags: [Gamification]
+      summary: Get user points, level, streak info
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/GamificationPoints' }
+
+  /gamification/transactions:
+    get:
+      tags: [Gamification]
+      summary: Get point transaction history
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string, enum: [earn, spend] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/PointTransaction' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /gamification/unlock:
+    post:
+      tags: [Gamification]
+      summary: Unlock content with points
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entityType, entityId]
+              properties:
+                entityType: { type: string, enum: [course, chapter, lesson, exam] }
+                entityId: { type: string, format: uuid }
+      responses:
+        '200': { description: Content unlocked }
+        '400': { description: Insufficient points }
+
+  /gamification/leaderboard:
+    get:
+      tags: [Gamification]
+      summary: Get leaderboard
+      parameters:
+        - name: period
+          in: query
+          schema: { type: string, enum: [daily, weekly, monthly, all_time], default: weekly }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100, maximum: 100 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      entries: { type: array, items: { $ref: '#/components/schemas/LeaderboardEntry' } }
+                      myRank: { type: integer }
+
+  /gamification/badges:
+    get:
+      tags: [Gamification]
+      summary: Get user badges
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Badge' } }
+
+  /gamification/missions:
+    get:
+      tags: [Gamification]
+      summary: Get today's daily missions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/DailyMission' } }
+
+  # ==================== PROGRESS ====================
+  /progress/{courseId}:
+    get:
+      tags: [Progress]
+      summary: Get learning progress for a course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/LearningProgress' }
+    put:
+      tags: [Progress]
+      summary: Update progress (auto-save)
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lessonId: { type: string, format: uuid }
+                currentPage: { type: integer }
+                scrollPosition: { type: integer }
+                videoTimestamp: { type: integer }
+                quizState: { type: object }
+      responses:
+        '200': { description: Progress saved }
+
+  /progress/resume:
+    get:
+      tags: [Progress]
+      summary: Get resume learning data (all in-progress courses)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/LearningProgress' }
+
+  # ==================== EXAMS ====================
+  /exams:
+    get:
+      tags: [Exams]
+      summary: List exams
+      parameters:
+        - name: subjectId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: certificationId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200': { description: Exam list }
+    post:
+      tags: [Exams]
+      summary: Create exam (Maker)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, timeLimitMinutes, passingScore, questionIds]
+              properties:
+                title: { type: string, maxLength: 300 }
+                subjectId: { type: string, format: uuid }
+                certificationId: { type: string, format: uuid }
+                timeLimitMinutes: { type: integer, minimum: 1, maximum: 480 }
+                passingScore: { type: integer, minimum: 0, maximum: 100 }
+                randomizeQuestions: { type: boolean, default: false }
+                shuffleAnswers: { type: boolean, default: false }
+                questionIds: { type: array, items: { type: string, format: uuid }, minItems: 5, maxItems: 200 }
+                accessType: { type: string, enum: [free, locked, premium] }
+                pointCost: { type: integer }
+      responses:
+        '201': { description: Exam created }
+
+  /exams/generate:
+    post:
+      tags: [Exams]
+      summary: AI generate exam
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, subjectId, questionCount]
+              properties:
+                title: { type: string }
+                subjectId: { type: string, format: uuid }
+                certificationId: { type: string, format: uuid }
+                questionCount: { type: integer, minimum: 5, maximum: 200 }
+                difficultyDistribution:
+                  type: object
+                  properties:
+                    easy: { type: integer }
+                    medium: { type: integer }
+                    hard: { type: integer }
+                timeLimitMinutes: { type: integer }
+                passingScore: { type: integer }
+      responses:
+        '201': { description: Exam generated }
+        '400': { description: Insufficient questions available }
+
+  /exams/{id}/start:
+    post:
+      tags: [Exams]
+      summary: Start exam attempt (Customer)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Exam started with questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      attemptId: { type: string, format: uuid }
+                      questions: { type: array, items: { $ref: '#/components/schemas/Question' } }
+                      timeLimitMinutes: { type: integer }
+                      startedAt: { type: string, format: date-time }
+
+  /exams/{id}/submit:
+    post:
+      tags: [Exams]
+      summary: Submit exam answers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attemptId, answers]
+              properties:
+                attemptId: { type: string, format: uuid }
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      questionId: { type: string, format: uuid }
+                      selectedOptions: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: Exam results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ExamAttempt' }
+
+  # ==================== SEARCH ====================
+  /search:
+    get:
+      tags: [Search]
+      summary: Full-text search across all content
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 200 }
+        - name: type
+          in: query
+          schema: { type: string, enum: [lesson, slide, quiz, note, bookmark] }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entityType: { type: string }
+                        entityId: { type: string, format: uuid }
+                        title: { type: string }
+                        snippet: { type: string }
+                        highlights: { type: array, items: { type: string } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  # ==================== NOTIFICATIONS ====================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get user notifications
+      parameters:
+        - name: isRead
+          in: query
+          schema: { type: boolean }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: object, properties: { count: { type: integer } } }
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Marked as read }
+
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '200': { description: All marked as read }
+
+  # ==================== AUDIT LOGS ====================
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: List audit logs (Admin)
+      parameters:
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+        - name: userId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: actionType
+          in: query
+          schema: { type: string, enum: [create, update, delete, access, login, logout] }
+        - name: resourceType
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/AuditLog' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /audit-logs/export:
+    post:
+      tags: [Audit]
+      summary: Export audit logs (Admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format: { type: string, enum: [csv, excel] }
+                startDate: { type: string, format: date }
+                endDate: { type: string, format: date }
+                filters: { type: object }
+      responses:
+        '202': { description: Export task started }
