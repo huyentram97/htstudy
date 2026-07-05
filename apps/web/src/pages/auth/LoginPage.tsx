@@ -44,7 +44,9 @@ function LoginPage() {
       </Form>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <a href="#">Quên mật khẩu?</a>
+        <a onClick={() => navigate('/forgot-password')}>Quên mật khẩu?</a>
+        <span style={{ margin: '0 8px' }}>|</span>
+        <a onClick={() => navigate('/register')}>Đăng ký tài khoản</a>
       </div>
     </Card>
   );
