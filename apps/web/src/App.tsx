@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import { Spin } from 'antd';
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -14,6 +15,13 @@ const AIChatPage = lazy(() => import('./pages/ai/AIChatPage'));
 const LeaderboardPage = lazy(() => import('./pages/leaderboard/LeaderboardPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+// Admin pages
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'));
+const ContentManagementPage = lazy(() => import('./pages/admin/ContentManagementPage'));
+const SystemConfigPage = lazy(() => import('./pages/admin/SystemConfigPage'));
+const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -30,7 +38,16 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
         </Route>
 
-        {/* Protected routes */}
+        {/* Admin routes */}
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/users" element={<UserManagementPage />} />
+          <Route path="/admin/content" element={<ContentManagementPage />} />
+          <Route path="/admin/config" element={<SystemConfigPage />} />
+          <Route path="/admin/audit" element={<AuditLogPage />} />
+        </Route>
+
+        {/* Customer/Learning routes */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/courses" element={<CoursesPage />} />
