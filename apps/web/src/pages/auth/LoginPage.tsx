@@ -16,6 +16,7 @@ function LoginPage() {
   return (
     <Card style={{ width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <img src="/logo.png" alt="H-T.Study" style={{ height: 64, marginBottom: 8 }} />
         <Title level={2} style={{ margin: 0 }}>H-T.Study</Title>
         <Text type="secondary">Nền tảng eLearning thông minh</Text>
       </div>

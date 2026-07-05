@@ -8,6 +8,11 @@ import AuthLayout from './layouts/AuthLayout';
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
 const CoursesPage = lazy(() => import('./pages/courses/CoursesPage'));
+const CourseDetailPage = lazy(() => import('./pages/courses/CourseDetailPage'));
+const ExamsPage = lazy(() => import('./pages/exams/ExamsPage'));
+const AIChatPage = lazy(() => import('./pages/ai/AIChatPage'));
+const LeaderboardPage = lazy(() => import('./pages/leaderboard/LeaderboardPage'));
+const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const Loading = () => (
@@ -29,6 +34,11 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/courses/:id" element={<CourseDetailPage />} />
+          <Route path="/exams" element={<ExamsPage />} />
+          <Route path="/ai-chat" element={<AIChatPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 

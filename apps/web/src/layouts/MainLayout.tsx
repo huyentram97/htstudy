@@ -40,8 +40,9 @@ function MainLayout() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider breakpoint="lg" collapsedWidth="0">
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text strong style={{ color: '#fff', fontSize: 18 }}>H-T.Study</Text>
+        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <img src="/logo.png" alt="H-T.Study" style={{ height: 32 }} />
+          <Text strong style={{ color: '#fff', fontSize: 16 }}>H-T.Study</Text>
         </div>
         <Menu
           theme="dark"
@@ -52,15 +53,15 @@ function MainLayout() {
         />
       </Sider>
       <Layout>
-        <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
+        <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
           <Badge count={3}>
             <BellOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
           </Badge>
           <Dropdown menu={userMenu}>
-            <Avatar icon={<UserOutlined />} style={{ cursor: 'pointer' }} />
+            <Avatar icon={<UserOutlined />} style={{ cursor: 'pointer', backgroundColor: '#1677ff' }} />
           </Dropdown>
         </Header>
-        <Content style={{ margin: 24, padding: 24, background: '#fff', borderRadius: 8 }}>
+        <Content style={{ margin: 24, padding: 24, background: '#fff', borderRadius: 8, minHeight: 280 }}>
           <Outlet />
         </Content>
       </Layout>
