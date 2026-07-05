@@ -3,7 +3,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { QuestionsModule } from './modules/questions/questions.module';
+import { ExamsModule } from './modules/exams/exams.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
+import { ProgressModule } from './modules/progress/progress.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SystemConfigModule } from './modules/config/config.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -26,7 +34,7 @@ import { HealthModule } from './modules/health/health.module';
         password: configService.get('DB_PASSWORD', 'htstudy_dev_pass'),
         database: configService.get('DB_DATABASE', 'htstudy'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Use migrations in production
+        synchronize: false,
         logging: configService.get('DB_LOGGING', 'false') === 'true',
       }),
     }),
@@ -35,7 +43,15 @@ import { HealthModule } from './modules/health/health.module';
     HealthModule,
     AuthModule,
     UsersModule,
+    RolesModule,
     CoursesModule,
+    QuestionsModule,
+    ExamsModule,
+    GamificationModule,
+    ProgressModule,
+    NotificationsModule,
+    SystemConfigModule,
+    AuditModule,
   ],
 })
 export class AppModule {}
