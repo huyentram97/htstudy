@@ -1,16 +1,29 @@
-import { Card, Form, Input, Button, Typography, Divider } from 'antd';
+import { useState } from 'react';
+import { Card, Form, Input, Button, Typography, Divider, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../../api';
 
 const { Title, Text } = Typography;
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const onFinish = async (values: any) => {
-    // TODO: Integrate with Auth API
-    console.log('Login:', values);
-    navigate('/dashboard');
+  const onFinish = async (values: { email: string; password: string }) => {
+    setLoading(true);
+    try {
+      const result = await authApi.login(values);
+      if (result.success && result.data?.accessToken) {
+        localStorage.setItem('token', result.data.accessToken);
+        message.success('Đăng nhập thành công!');
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      message.error(error.response?.data?.error?.message || 'Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,7 +44,7 @@ function LoginPage() {
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" block>
+          <Button type="primary" htmlType="submit" block loading={loading}>
             Đăng nhập
           </Button>
         </Form.Item>
@@ -39,7 +52,7 @@ function LoginPage() {
         <Divider plain>hoặc</Divider>
 
         <Button block size="large" onClick={() => navigate('/dashboard')}>
-          Đăng nhập với SSO
+          Xem Demo (không cần đăng nhập)
         </Button>
       </Form>
 
