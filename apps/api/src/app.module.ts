@@ -12,6 +12,7 @@ import { ProgressModule } from './modules/progress/progress.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SystemConfigModule } from './modules/config/config.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { ContentImportModule } from './modules/content-import/content-import.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -52,6 +53,7 @@ import { HealthModule } from './modules/health/health.module';
     NotificationsModule,
     SystemConfigModule,
     AuditModule,
+    ContentImportModule,
   ],
 })
 export class AppModule {}

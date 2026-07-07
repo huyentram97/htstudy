@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ContentImportService } from './content-import.service';
+import { ImportPipelineService } from './services/import-pipeline.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -10,7 +11,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('import')
 export class ContentImportController {
-  constructor(private readonly service: ContentImportService) {}
+  constructor(
+    private readonly service: ContentImportService,
+    private readonly pipeline: ImportPipelineService,
+  ) {}
 
   @Get('preview')
   @Roles('Admin', 'Maker')
@@ -22,9 +26,17 @@ export class ContentImportController {
 
   @Post('subject')
   @Roles('Admin', 'Maker')
-  @ApiOperation({ summary: 'Import a subject folder' })
+  @ApiOperation({ summary: 'Import a subject folder (legacy)' })
   async importSubject(@Body() body: { folderPath: string }, @Request() req: any) {
     const result = await this.service.importSubject(body.folderPath, req.user.tenantId, req.user.sub);
+    return { success: true, data: result };
+  }
+
+  @Post('pipeline')
+  @Roles('Admin', 'Maker')
+  @ApiOperation({ summary: 'Run full import pipeline: read → classify → deduplicate → generate output' })
+  async runPipeline(@Body() body: { folderPath: string; subjectName: string }) {
+    const result = await this.pipeline.runPipeline(body.folderPath, body.subjectName);
     return { success: true, data: result };
   }
 }
