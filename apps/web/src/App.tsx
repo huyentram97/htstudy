@@ -30,6 +30,7 @@ const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage')
 const ContentManagementPage = lazy(() => import('./pages/admin/ContentManagementPage'));
 const SystemConfigPage = lazy(() => import('./pages/admin/SystemConfigPage'));
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage'));
+const RolePermissionPage = lazy(() => import('./pages/admin/RolePermissionPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -56,6 +57,7 @@ function App() {
           <Route path="/admin/content" element={<ContentManagementPage />} />
           <Route path="/admin/config" element={<SystemConfigPage />} />
           <Route path="/admin/audit" element={<AuditLogPage />} />
+          <Route path="/admin/roles" element={<RolePermissionPage />} />
         </Route>
 
         {/* Customer */}

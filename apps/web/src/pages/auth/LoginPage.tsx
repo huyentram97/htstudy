@@ -3,21 +3,28 @@ import { Card, Form, Input, Button, Typography, Divider, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api';
+import { useAuthStore } from '../../store/auth';
 
 const { Title, Text } = Typography;
 
 function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { login } = useAuthStore();
 
   const onFinish = async (values: { email: string; password: string }) => {
     setLoading(true);
     try {
       const result = await authApi.login(values);
       if (result.success && result.data?.accessToken) {
-        localStorage.setItem('token', result.data.accessToken);
+        login(result.data.accessToken, result.data.user);
         message.success('Đăng nhập thành công!');
-        navigate('/dashboard');
+        // Admin → redirect to admin panel
+        if (result.data.user.roles?.includes('Admin')) {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error: any) {
       message.error(error.response?.data?.error?.message || 'Đăng nhập thất bại');

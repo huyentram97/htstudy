@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Badge, Dropdown, Typography } from 'antd';
 import {
@@ -9,7 +10,10 @@ import {
   UserOutlined,
   LogoutOutlined,
   RobotOutlined,
+  SettingOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
+import { useAuthStore } from '../store/auth';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -17,6 +21,11 @@ const { Text } = Typography;
 function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAdmin, isMaker, isChecker, logout, loadFromStorage } = useAuthStore();
+
+  useEffect(() => {
+    loadFromStorage();
+  }, []);
 
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
@@ -27,14 +36,22 @@ function MainLayout() {
     { key: '/leaderboard', icon: <TrophyOutlined />, label: 'Bảng xếp hạng' },
   ];
 
+  // Admin/Maker/Checker: thêm menu quản trị
+  if (isAdmin || isMaker || isChecker) {
+    menuItems.push({ type: 'divider' } as any);
+    menuItems.push({ key: '/admin', icon: <CrownOutlined />, label: 'Quản trị' });
+  }
+
   const userMenu = {
     items: [
       { key: 'profile', icon: <UserOutlined />, label: 'Hồ sơ' },
+      ...(isAdmin ? [{ key: 'admin', icon: <SettingOutlined />, label: 'Admin Panel' }] : []),
       { key: 'logout', icon: <LogoutOutlined />, label: 'Đăng xuất' },
     ],
     onClick: ({ key }: { key: string }) => {
-      if (key === 'logout') navigate('/login');
+      if (key === 'logout') { logout(); navigate('/login'); }
       if (key === 'profile') navigate('/profile');
+      if (key === 'admin') navigate('/admin');
     },
   };
 
@@ -55,11 +72,12 @@ function MainLayout() {
       </Sider>
       <Layout>
         <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+          {isAdmin && <Text type="secondary" style={{ fontSize: 12 }}><CrownOutlined /> Admin</Text>}
           <Badge count={3}>
             <BellOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
           </Badge>
           <Dropdown menu={userMenu}>
-            <Avatar icon={<UserOutlined />} style={{ cursor: 'pointer', backgroundColor: '#1677ff' }} />
+            <Avatar icon={<UserOutlined />} style={{ cursor: 'pointer', backgroundColor: isAdmin ? '#f5222d' : '#1677ff' }} />
           </Dropdown>
         </Header>
         <Content style={{ margin: 24, padding: 24, background: '#fff', borderRadius: 8, minHeight: 280 }}>
