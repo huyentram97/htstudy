@@ -29,6 +29,7 @@ CREATE TABLE users (
     phone VARCHAR(15),
     avatar_url VARCHAR(500),
     status VARCHAR(20) NOT NULL DEFAULT 'active',
+    password_hash VARCHAR(200),
     keycloak_id VARCHAR(100),
     last_login_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

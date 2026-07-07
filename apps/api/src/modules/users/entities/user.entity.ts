@@ -35,6 +35,9 @@ export class User {
   @Column({ length: 20, default: 'active' })
   status: string;
 
+  @Column({ name: 'password_hash', length: 200, nullable: true })
+  passwordHash: string;
+
   @Column({ name: 'keycloak_id', length: 100, nullable: true })
   keycloakId: string;
 

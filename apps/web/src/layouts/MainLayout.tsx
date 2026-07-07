@@ -22,6 +22,7 @@ function MainLayout() {
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/courses', icon: <BookOutlined />, label: 'Khóa học' },
     { key: '/exams', icon: <FileTextOutlined />, label: 'Luyện đề' },
+    { key: '/learning-paths', icon: <TrophyOutlined />, label: 'Lộ trình' },
     { key: '/ai-chat', icon: <RobotOutlined />, label: 'AI Chat' },
     { key: '/leaderboard', icon: <TrophyOutlined />, label: 'Bảng xếp hạng' },
   ];

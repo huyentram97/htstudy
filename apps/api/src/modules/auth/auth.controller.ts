@@ -8,34 +8,18 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Post('register')
+  @ApiOperation({ summary: 'Register new account' })
+  async register(@Body() body: { username: string; email: string; fullName: string; password: string }) {
+    const user = await this.authService.register(body);
+    return { success: true, data: user };
+  }
+
   @Post('login')
-  @ApiOperation({ summary: 'Initiate SSO/OIDC login' })
-  async login(@Body() body: { redirectUri?: string }) {
-    // In production, this redirects to Keycloak
-    // For development, we issue a dev token
-    const devPayload = {
-      sub: '00000000-0000-0000-0000-000000000100',
-      tenantId: '00000000-0000-0000-0000-000000000001',
-      username: 'admin',
-      email: 'admin@htstudy.vn',
-      roles: ['Admin'],
-    };
-
-    const { accessToken, expiresIn } = await this.authService.generateToken(devPayload);
-
-    return {
-      success: true,
-      data: {
-        accessToken,
-        expiresIn,
-        user: {
-          id: devPayload.sub,
-          username: devPayload.username,
-          email: devPayload.email,
-          roles: devPayload.roles,
-        },
-      },
-    };
+  @ApiOperation({ summary: 'Login with email and password' })
+  async login(@Body() body: { email: string; password: string }) {
+    const result = await this.authService.login(body.email, body.password);
+    return { success: true, data: result };
   }
 
   @Post('refresh')
@@ -60,7 +44,6 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async logout() {
-    // Invalidate session in Redis (to be implemented)
     return { success: true, data: { message: 'Logged out successfully' } };
   }
 }

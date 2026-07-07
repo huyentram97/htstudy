@@ -5,17 +5,22 @@ import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 import AdminLayout from './layouts/AdminLayout';
 
-// Lazy load pages
+// Auth pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+
+// Customer pages
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
 const CoursesPage = lazy(() => import('./pages/courses/CoursesPage'));
 const CourseDetailPage = lazy(() => import('./pages/courses/CourseDetailPage'));
+const LessonViewerPage = lazy(() => import('./pages/courses/LessonViewerPage'));
 const ExamsPage = lazy(() => import('./pages/exams/ExamsPage'));
+const ExamTakingPage = lazy(() => import('./pages/exams/ExamTakingPage'));
 const AIChatPage = lazy(() => import('./pages/ai/AIChatPage'));
 const LeaderboardPage = lazy(() => import('./pages/leaderboard/LeaderboardPage'));
+const LearningPathPage = lazy(() => import('./pages/learning-path/LearningPathPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
@@ -36,7 +41,7 @@ function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
-        {/* Auth routes */}
+        {/* Auth */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -44,7 +49,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
-        {/* Admin routes */}
+        {/* Admin */}
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<UserManagementPage />} />
@@ -53,19 +58,21 @@ function App() {
           <Route path="/admin/audit" element={<AuditLogPage />} />
         </Route>
 
-        {/* Customer/Learning routes */}
+        {/* Customer */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:id" element={<CourseDetailPage />} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonViewerPage />} />
           <Route path="/exams" element={<ExamsPage />} />
+          <Route path="/exams/:id/take" element={<ExamTakingPage />} />
           <Route path="/ai-chat" element={<AIChatPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/learning-paths" element={<LearningPathPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
-        {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
