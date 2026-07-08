@@ -51,7 +51,7 @@ function CoursesPage() {
                     <StarOutlined /> {course.pointCost} điểm
                   </Button>
                 ) : (
-                  <Button type="primary" key="start">Vào học</Button>
+                  <Button type="primary" key="start" onClick={() => navigate(`/courses/${course.id}`)}>Vào học</Button>
                 ),
               ]}
             >
