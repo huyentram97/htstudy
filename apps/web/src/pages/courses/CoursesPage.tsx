@@ -13,7 +13,7 @@ function CoursesPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    apiClient.get('/courses').then((res) => {
+    apiClient.get('/courses', { params: { status: 'published' } }).then((res) => {
       setCourses(res.data.data || []);
     }).catch(() => {
       setCourses([]);

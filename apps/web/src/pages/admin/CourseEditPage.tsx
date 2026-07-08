@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Typography, Button, Form, Input, Select, Space, Collapse, List, Modal, Upload, Tag, Popconfirm, message, Spin, Divider } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, FileOutlined, ArrowLeftOutlined, SaveOutlined, BookOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, FileOutlined, ArrowLeftOutlined, SaveOutlined, BookOutlined, SendOutlined } from '@ant-design/icons';
 import { apiClient } from '../../api';
 
 const { Title, Text } = Typography;
@@ -110,8 +110,35 @@ function CourseEditPage() {
         <Space>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/content')}>Quay lại</Button>
           <Title level={4} style={{ margin: 0 }}>{id ? 'Sửa khóa học' : 'Tạo khóa học mới'}</Title>
+          {course?.status && <Tag color={
+            course.status === 'published' ? 'green' :
+            course.status === 'pending_review' ? 'blue' :
+            course.status === 'rejected' ? 'red' : 'default'
+          }>{
+            course.status === 'published' ? 'Đã xuất bản' :
+            course.status === 'pending_review' ? 'Chờ duyệt' :
+            course.status === 'rejected' ? 'Từ chối' : 'Nháp'
+          }</Tag>}
         </Space>
         <Space>
+          {id && course?.status === 'draft' && (
+            <Button icon={<SendOutlined />} onClick={async () => {
+              try {
+                await apiClient.post(`/courses/${id}/submit`);
+                message.success('Đã gửi duyệt');
+                apiClient.get(`/courses/${id}`).then((res) => setCourse(res.data.data));
+              } catch (err: any) { message.error(err.response?.data?.message || 'Lỗi'); }
+            }}>Gửi duyệt</Button>
+          )}
+          {id && course?.status === 'rejected' && (
+            <Button icon={<SendOutlined />} onClick={async () => {
+              try {
+                await apiClient.post(`/courses/${id}/submit`);
+                message.success('Đã gửi duyệt lại');
+                apiClient.get(`/courses/${id}`).then((res) => setCourse(res.data.data));
+              } catch (err: any) { message.error(err.response?.data?.message || 'Lỗi'); }
+            }}>Gửi duyệt lại</Button>
+          )}
           {id && (
             <Popconfirm title="Xóa khóa học này?" onConfirm={handleDeleteCourse}>
               <Button danger icon={<DeleteOutlined />}>Xóa</Button>

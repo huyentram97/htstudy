@@ -1,128 +1,64 @@
-import { useParams } from 'react-router-dom';
-import { Card, Typography, Progress, List, Tag, Button, Collapse, Row, Col, Statistic } from 'antd';
-import {
-  PlayCircleOutlined,
-  CheckCircleOutlined,
-  LockOutlined,
-  ClockCircleOutlined,
-  BookOutlined,
-} from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, Typography, Button, Tag, Spin, List, Row, Col } from 'antd';
+import { PlayCircleOutlined, BookOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { apiClient } from '../../api';
 
 const { Title, Text, Paragraph } = Typography;
 
 function CourseDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data
-  const course = {
-    id,
-    title: 'Kế toán tài chính',
-    description: 'Khóa học cung cấp kiến thức toàn diện về kế toán tài chính, bao gồm nguyên lý kế toán, báo cáo tài chính, và các chuẩn mực kế toán Việt Nam.',
-    subject: 'Kế toán',
-    progress: 75,
-    totalLessons: 24,
-    completedLessons: 18,
-    totalDuration: '12 giờ',
-    chapters: [
-      {
-        key: '1',
-        title: 'Chương 1: Nguyên lý kế toán',
-        lessons: [
-          { id: '1', title: 'Bài 1: Giới thiệu kế toán', status: 'completed', duration: '25 phút' },
-          { id: '2', title: 'Bài 2: Phương trình kế toán', status: 'completed', duration: '30 phút' },
-          { id: '3', title: 'Bài 3: Tài khoản kế toán', status: 'completed', duration: '35 phút' },
-        ],
-      },
-      {
-        key: '2',
-        title: 'Chương 2: Báo cáo tài chính',
-        lessons: [
-          { id: '4', title: 'Bài 4: Bảng cân đối kế toán', status: 'completed', duration: '40 phút' },
-          { id: '5', title: 'Bài 5: Báo cáo kết quả kinh doanh', status: 'current', duration: '35 phút' },
-          { id: '6', title: 'Bài 6: Báo cáo lưu chuyển tiền tệ', status: 'locked', duration: '30 phút' },
-        ],
-      },
-      {
-        key: '3',
-        title: 'Chương 3: Chuẩn mực kế toán VN',
-        lessons: [
-          { id: '7', title: 'Bài 7: VAS 01 - Chuẩn mực chung', status: 'locked', duration: '45 phút' },
-          { id: '8', title: 'Bài 8: VAS 02 - Hàng tồn kho', status: 'locked', duration: '40 phút' },
-        ],
-      },
-    ],
-  };
+  useEffect(() => {
+    if (!id) return;
+    apiClient.get(`/courses/${id}`).then((res) => {
+      setCourse(res.data.data);
+    }).catch(() => {
+      setCourse(null);
+    }).finally(() => setLoading(false));
+  }, [id]);
 
-  const getLessonIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-      case 'current': return <PlayCircleOutlined style={{ color: '#1677ff' }} />;
-      case 'locked': return <LockOutlined style={{ color: '#d9d9d9' }} />;
-      default: return null;
-    }
-  };
+  if (loading) return <Spin size="large" style={{ display: 'block', margin: '100px auto' }} />;
+  if (!course) return <Text type="danger">Khóa học không tồn tại.</Text>;
 
   return (
     <div>
+      <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/courses')} style={{ marginBottom: 16 }}>
+        Quay lại
+      </Button>
+
       {/* Course Header */}
       <Card style={{ marginBottom: 24 }}>
-        <Row gutter={24} align="middle">
+        <Row gutter={24}>
           <Col xs={24} md={16}>
-            <Tag color="blue">{course.subject}</Tag>
+            <Tag color="blue">{course.accessType === 'free' ? 'Miễn phí' : course.accessType}</Tag>
+            <Tag color={course.status === 'published' ? 'green' : 'default'}>{course.status}</Tag>
             <Title level={3} style={{ marginTop: 8 }}>{course.title}</Title>
-            <Paragraph type="secondary">{course.description}</Paragraph>
+            <Paragraph type="secondary">{course.description || 'Chưa có mô tả.'}</Paragraph>
             <Button type="primary" size="large" icon={<PlayCircleOutlined />}>
-              Tiếp tục học
+              Bắt đầu học
             </Button>
           </Col>
-          <Col xs={24} md={8}>
-            <div style={{ textAlign: 'center' }}>
-              <Progress type="circle" percent={course.progress} />
-              <div style={{ marginTop: 16 }}>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Statistic title="Bài học" value={course.completedLessons} suffix={`/ ${course.totalLessons}`} prefix={<BookOutlined />} />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic title="Thời lượng" value={course.totalDuration} prefix={<ClockCircleOutlined />} />
-                  </Col>
-                </Row>
-              </div>
-            </div>
+          <Col xs={24} md={8} style={{ textAlign: 'center', paddingTop: 20 }}>
+            <BookOutlined style={{ fontSize: 64, color: '#1677ff' }} />
           </Col>
         </Row>
       </Card>
 
-      {/* Chapter List */}
-      <Card title="Nội dung khóa học">
-        <Collapse defaultActiveKey={['1', '2']} items={course.chapters.map((chapter) => ({
-          key: chapter.key,
-          label: <Text strong>{chapter.title}</Text>,
-          children: (
-            <List
-              dataSource={chapter.lessons}
-              renderItem={(lesson) => (
-                <List.Item
-                  actions={[
-                    <Text type="secondary"><ClockCircleOutlined /> {lesson.duration}</Text>,
-                    lesson.status === 'current' ? (
-                      <Button type="primary" size="small">Học tiếp</Button>
-                    ) : lesson.status === 'completed' ? (
-                      <Button size="small">Xem lại</Button>
-                    ) : (
-                      <Button size="small" disabled icon={<LockOutlined />}>Khóa</Button>
-                    ),
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={getLessonIcon(lesson.status)}
-                    title={lesson.title}
-                  />
-                </List.Item>
-              )}
-            />
-          ),
-        }))} />
+      {/* Course Info */}
+      <Card title="Thông tin khóa học">
+        <List>
+          <List.Item><Text strong>Trạng thái:</Text> {course.status}</List.Item>
+          <List.Item><Text strong>Loại truy cập:</Text> {course.accessType}</List.Item>
+          {course.pointCost > 0 && <List.Item><Text strong>Điểm mở khóa:</Text> {course.pointCost}</List.Item>}
+          <List.Item><Text strong>Ngày tạo:</Text> {new Date(course.createdAt).toLocaleDateString('vi-VN')}</List.Item>
+        </List>
+        <Paragraph type="secondary" style={{ marginTop: 16 }}>
+          Nội dung bài học chi tiết sẽ hiển thị khi có dữ liệu từ hệ thống import tài liệu.
+        </Paragraph>
       </Card>
     </div>
   );
