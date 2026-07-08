@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Table, Tag, Button, Space, Typography, Tabs, Badge, Popconfirm, message, Modal, Form, Input, Select } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api';
 
 const { Title, Text } = Typography;
@@ -14,6 +15,7 @@ function ContentManagementPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState('');
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -123,7 +125,7 @@ function ContentManagementPage() {
           {record.status === 'rejected' && (
             <Button size="small" icon={<SendOutlined />} onClick={() => handleSubmitReview(record.id)}>Gửi lại</Button>
           )}
-          <Button size="small" icon={<EditOutlined />} onClick={() => { setEditingCourse(record); form.setFieldsValue(record); setIsModalOpen(true); }}>Sửa</Button>
+          <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/admin/courses/${record.id}`)}>Sửa</Button>
           <Popconfirm title="Xóa khóa học này?" onConfirm={() => handleDelete(record.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -138,7 +140,7 @@ function ContentManagementPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3}>Quản lý Khóa học</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingCourse(null); form.resetFields(); setIsModalOpen(true); }}>Tạo khóa học</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/admin/courses/new')}>Tạo khóa học</Button>
       </div>
 
       <Card>

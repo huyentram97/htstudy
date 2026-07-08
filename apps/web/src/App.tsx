@@ -33,6 +33,7 @@ const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage'));
 const RolePermissionPage = lazy(() => import('./pages/admin/RolePermissionPage'));
 const ExamManagementPage = lazy(() => import('./pages/admin/ExamManagementPage'));
 const LearningPathManagementPage = lazy(() => import('./pages/admin/LearningPathManagementPage'));
+const CourseEditPage = lazy(() => import('./pages/admin/CourseEditPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -57,6 +58,8 @@ function App() {
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<UserManagementPage />} />
           <Route path="/admin/content" element={<ContentManagementPage />} />
+          <Route path="/admin/courses/new" element={<CourseEditPage />} />
+          <Route path="/admin/courses/:id" element={<CourseEditPage />} />
           <Route path="/admin/config" element={<SystemConfigPage />} />
           <Route path="/admin/audit" element={<AuditLogPage />} />
           <Route path="/admin/roles" element={<RolePermissionPage />} />
