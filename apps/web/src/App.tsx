@@ -31,6 +31,8 @@ const ContentManagementPage = lazy(() => import('./pages/admin/ContentManagement
 const SystemConfigPage = lazy(() => import('./pages/admin/SystemConfigPage'));
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage'));
 const RolePermissionPage = lazy(() => import('./pages/admin/RolePermissionPage'));
+const ExamManagementPage = lazy(() => import('./pages/admin/ExamManagementPage'));
+const LearningPathManagementPage = lazy(() => import('./pages/admin/LearningPathManagementPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -58,6 +60,8 @@ function App() {
           <Route path="/admin/config" element={<SystemConfigPage />} />
           <Route path="/admin/audit" element={<AuditLogPage />} />
           <Route path="/admin/roles" element={<RolePermissionPage />} />
+          <Route path="/admin/exams" element={<ExamManagementPage />} />
+          <Route path="/admin/learning-paths" element={<LearningPathManagementPage />} />
         </Route>
 
         {/* Customer */}

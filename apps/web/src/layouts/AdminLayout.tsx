@@ -9,6 +9,8 @@ import {
   LogoutOutlined,
   HomeOutlined,
   SafetyOutlined,
+  FileTextOutlined,
+  NodeIndexOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -22,7 +24,9 @@ function AdminLayout() {
     { key: '/admin', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/admin/users', icon: <UserOutlined />, label: 'Người dùng' },
     { key: '/admin/roles', icon: <SafetyOutlined />, label: 'Phân quyền' },
-    { key: '/admin/content', icon: <BookOutlined />, label: 'Nội dung' },
+    { key: '/admin/content', icon: <BookOutlined />, label: 'Khóa học' },
+    { key: '/admin/exams', icon: <FileTextOutlined />, label: 'Luyện đề' },
+    { key: '/admin/learning-paths', icon: <NodeIndexOutlined />, label: 'Lộ trình' },
     { key: '/admin/config', icon: <SettingOutlined />, label: 'Cấu hình' },
     { key: '/admin/audit', icon: <AuditOutlined />, label: 'Audit Log' },
     { type: 'divider' as const },

@@ -1,5 +1,5 @@
-import { Card, Table, Tag, Button, Space, Typography, Tabs, Badge } from 'antd';
-import { CheckOutlined, CloseOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Button, Space, Typography, Tabs, Badge, Popconfirm, message } from 'antd';
+import { CheckOutlined, CloseOutlined, EyeOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -40,6 +40,12 @@ function ContentManagementPage() {
               <Button size="small" danger icon={<CloseOutlined />}>Từ chối</Button>
             </>
           )}
+          {(record.status === 'draft' || record.status === 'rejected') && (
+            <Button size="small" icon={<EditOutlined />}>Sửa</Button>
+          )}
+          <Popconfirm title="Xóa khóa học này?" onConfirm={() => message.success('Đã xóa')}>
+            <Button size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
         </Space>
       ),
     },
