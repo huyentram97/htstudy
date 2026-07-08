@@ -1,16 +1,99 @@
-import { Card, Table, Tag, Button, Space, Typography, Tabs, Badge, Popconfirm, message } from 'antd';
-import { CheckOutlined, CloseOutlined, EyeOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { Card, Table, Tag, Button, Space, Typography, Tabs, Badge, Popconfirm, message, Modal, Form, Input, Select } from 'antd';
+import { CheckOutlined, CloseOutlined, EyeOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
+import { apiClient } from '../../api';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 function ContentManagementPage() {
-  const courses = [
-    { key: '1', title: 'Kế toán tài chính', subject: 'Kế toán', status: 'published', createdBy: 'maker01', reviewedBy: 'checker01', createdAt: '01/06/2026' },
-    { key: '2', title: 'Kiểm toán nội bộ', subject: 'Kiểm toán', status: 'published', createdBy: 'maker01', reviewedBy: 'checker01', createdAt: '15/06/2026' },
-    { key: '3', title: 'Thuế TNDN nâng cao', subject: 'Thuế', status: 'pending_review', createdBy: 'maker01', reviewedBy: null, createdAt: '01/07/2026' },
-    { key: '4', title: 'IFRS Foundation', subject: 'Kế toán', status: 'draft', createdBy: 'maker01', reviewedBy: null, createdAt: '03/07/2026' },
-    { key: '5', title: 'Quản trị rủi ro', subject: 'Quản trị', status: 'rejected', createdBy: 'maker01', reviewedBy: 'checker01', createdAt: '28/06/2026' },
-  ];
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectingId, setRejectingId] = useState('');
+  const [form] = Form.useForm();
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/courses');
+      setCourses(res.data.data || []);
+    } catch (err: any) {
+      message.error('Không tải được danh sách khóa học');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchCourses(); }, []);
+
+  const handleCreate = async (values: any) => {
+    try {
+      await apiClient.post('/courses', values);
+      message.success('Đã tạo khóa học');
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi tạo khóa học');
+    }
+  };
+
+  const handleUpdate = async (values: any) => {
+    try {
+      await apiClient.put(`/courses/${editingCourse.id}`, values);
+      message.success('Đã cập nhật');
+      setIsModalOpen(false);
+      setEditingCourse(null);
+      form.resetFields();
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi cập nhật');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await apiClient.delete(`/courses/${id}`);
+      message.success('Đã xóa');
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi xóa');
+    }
+  };
+
+  const handleSubmitReview = async (id: string) => {
+    try {
+      await apiClient.post(`/courses/${id}/submit`);
+      message.success('Đã gửi duyệt');
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi');
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      await apiClient.post(`/courses/${id}/approve`);
+      message.success('Đã duyệt & xuất bản');
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi duyệt');
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      await apiClient.post(`/courses/${rejectingId}/reject`, { reason: rejectReason });
+      message.success('Đã từ chối');
+      setRejectModalOpen(false);
+      setRejectReason('');
+      fetchCourses();
+    } catch (err: any) {
+      message.error(err.response?.data?.message || 'Lỗi từ chối');
+    }
+  };
 
   const statusConfig: Record<string, { color: string; text: string }> = {
     draft: { color: 'default', text: 'Nháp' },
@@ -21,29 +104,27 @@ function ContentManagementPage() {
 
   const columns = [
     { title: 'Tên khóa học', dataIndex: 'title' },
-    { title: 'Môn học', dataIndex: 'subject', render: (s: string) => <Tag>{s}</Tag> },
+    { title: 'Trạng thái', dataIndex: 'status', render: (s: string) => <Tag color={statusConfig[s]?.color}>{statusConfig[s]?.text}</Tag> },
+    { title: 'Truy cập', dataIndex: 'accessType', render: (s: string) => <Tag>{s}</Tag> },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', render: (d: string) => new Date(d).toLocaleDateString('vi-VN') },
     {
-      title: 'Trạng thái', dataIndex: 'status',
-      render: (status: string) => <Tag color={statusConfig[status]?.color}>{statusConfig[status]?.text}</Tag>,
-    },
-    { title: 'Người tạo', dataIndex: 'createdBy' },
-    { title: 'Người duyệt', dataIndex: 'reviewedBy', render: (v: string) => v || '-' },
-    { title: 'Ngày tạo', dataIndex: 'createdAt' },
-    {
-      title: 'Thao tác',
+      title: 'Thao tác', width: 320,
       render: (_: any, record: any) => (
-        <Space>
-          <Button size="small" icon={<EyeOutlined />}>Xem</Button>
+        <Space wrap>
+          {record.status === 'draft' && (
+            <Button size="small" icon={<SendOutlined />} onClick={() => handleSubmitReview(record.id)}>Gửi duyệt</Button>
+          )}
           {record.status === 'pending_review' && (
             <>
-              <Button size="small" type="primary" icon={<CheckOutlined />}>Duyệt</Button>
-              <Button size="small" danger icon={<CloseOutlined />}>Từ chối</Button>
+              <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => handleApprove(record.id)}>Duyệt</Button>
+              <Button size="small" danger icon={<CloseOutlined />} onClick={() => { setRejectingId(record.id); setRejectModalOpen(true); }}>Từ chối</Button>
             </>
           )}
-          {(record.status === 'draft' || record.status === 'rejected') && (
-            <Button size="small" icon={<EditOutlined />}>Sửa</Button>
+          {record.status === 'rejected' && (
+            <Button size="small" icon={<SendOutlined />} onClick={() => handleSubmitReview(record.id)}>Gửi lại</Button>
           )}
-          <Popconfirm title="Xóa khóa học này?" onConfirm={() => message.success('Đã xóa')}>
+          <Button size="small" icon={<EditOutlined />} onClick={() => { setEditingCourse(record); form.setFieldsValue(record); setIsModalOpen(true); }}>Sửa</Button>
+          <Popconfirm title="Xóa khóa học này?" onConfirm={() => handleDelete(record.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -53,24 +134,50 @@ function ContentManagementPage() {
 
   const pendingCount = courses.filter((c) => c.status === 'pending_review').length;
 
-  const tabItems = [
-    { key: 'all', label: `Tất cả (${courses.length})` },
-    { key: 'pending', label: <Badge count={pendingCount} offset={[10, 0]}>Chờ duyệt</Badge> },
-    { key: 'published', label: 'Đã xuất bản' },
-    { key: 'draft', label: 'Nháp' },
-  ];
-
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={3}>Quản lý nội dung</Title>
-        <Button type="primary" icon={<PlusOutlined />}>Tạo khóa học</Button>
+        <Title level={3}>Quản lý Khóa học</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingCourse(null); form.resetFields(); setIsModalOpen(true); }}>Tạo khóa học</Button>
       </div>
 
       <Card>
-        <Tabs items={tabItems} defaultActiveKey="all" />
-        <Table dataSource={courses} columns={columns} pagination={{ pageSize: 10 }} />
+        <Tabs defaultActiveKey="all" items={[
+          { key: 'all', label: `Tất cả (${courses.length})` },
+          { key: 'pending', label: <Badge count={pendingCount} offset={[10, 0]}>Chờ duyệt</Badge> },
+        ]} />
+        <Table dataSource={courses} columns={columns} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} size="small" />
       </Card>
+
+      {/* Workflow guide */}
+      <Card style={{ marginTop: 16, background: '#f6ffed' }} size="small">
+        <Text strong>Luồng Maker → Checker: </Text>
+        <Tag color="default">Nháp</Tag> → <Tag color="processing">Chờ duyệt</Tag> → <Tag color="success">Đã xuất bản</Tag> | <Tag color="error">Từ chối</Tag>
+      </Card>
+
+      {/* Modal tạo/sửa */}
+      <Modal title={editingCourse ? 'Sửa khóa học' : 'Tạo khóa học'} open={isModalOpen} onCancel={() => setIsModalOpen(false)} onOk={() => form.submit()} okText={editingCourse ? 'Cập nhật' : 'Tạo'}>
+        <Form form={form} layout="vertical" onFinish={editingCourse ? handleUpdate : handleCreate}>
+          <Form.Item name="title" label="Tên khóa học" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item name="accessType" label="Loại truy cập" initialValue="free">
+            <Select>
+              <Select.Option value="free">Miễn phí</Select.Option>
+              <Select.Option value="locked">Khóa (mở bằng điểm)</Select.Option>
+              <Select.Option value="premium">Premium</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal từ chối */}
+      <Modal title="Từ chối khóa học" open={rejectModalOpen} onCancel={() => setRejectModalOpen(false)} onOk={handleReject} okText="Từ chối" okButtonProps={{ danger: true }}>
+        <Input.TextArea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="Lý do từ chối (tối thiểu 10 ký tự)..." />
+      </Modal>
     </div>
   );
 }

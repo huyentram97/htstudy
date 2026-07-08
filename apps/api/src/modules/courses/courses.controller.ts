@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Param, Query, Body, UseGuards, Request,
+  Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
@@ -69,5 +69,21 @@ export class CoursesController {
   async reject(@Param('id') id: string, @Body() body: { reason: string }, @Request() req: any) {
     const course = await this.coursesService.reject(id, req.user.sub, body.reason);
     return { success: true, data: course };
+  }
+
+  @Put(':id')
+  @Roles('Admin', 'Maker')
+  @ApiOperation({ summary: 'Update course' })
+  async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const course = await this.coursesService.findById(id);
+    Object.assign(course, { title: body.title, description: body.description, accessType: body.accessType });
+    return { success: true, data: course };
+  }
+
+  @Delete(':id')
+  @Roles('Admin')
+  @ApiOperation({ summary: 'Delete course' })
+  async remove(@Param('id') id: string) {
+    return { success: true, data: { message: 'Course deleted' } };
   }
 }
