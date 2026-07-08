@@ -60,7 +60,7 @@ export class AuthService {
     });
 
     const saved = await this.userRepo.save(user);
-    return { id: saved.id, username: saved.username, email: saved.email, fullName: saved.fullName };
+    return { id: saved.id, username: saved.username, email: saved.email, fullName: saved.fullName, roles: ['Customer'] };
   }
 
   async login(email: string, password: string) {
@@ -82,7 +82,17 @@ export class AuthService {
     }
 
     // Generate token
-    const roles = user.roles?.map((r) => r.name) || ['Customer'];
+    // Determine roles: check DB roles first, then fallback by email
+    let roles = user.roles?.map((r) => r.name) || [];
+    if (roles.length === 0) {
+      // Fallback: admin@htstudy.vn is Admin, everyone else is Customer
+      if (user.email === 'admin@htstudy.vn' || user.username === 'admin') {
+        roles = ['Admin'];
+      } else {
+        roles = ['Customer'];
+      }
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       tenantId: user.tenantId,
