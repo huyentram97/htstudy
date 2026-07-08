@@ -45,31 +45,16 @@ function CoursesPage() {
                   <Text style={{ fontSize: 40 }}>📚</Text>
                 </div>
               }
-              actions={[
-                course.accessType === 'locked' ? (
-                  <Button type="default" icon={<LockOutlined />} key="lock">
-                    <StarOutlined /> {course.pointCost} điểm
-                  </Button>
-                ) : (
-                  <Button type="primary" key="start" onClick={() => navigate(`/courses/${course.id}`)}>Vào học</Button>
-                ),
-              ]}
             >
               <Meta
-                title={
-                  <span>
-                    {course.title}
-                    {course.accessType === 'premium' && <Tag color="gold" style={{ marginLeft: 8 }}>Premium</Tag>}
-                    {course.accessType === 'locked' && <Tag color="red" style={{ marginLeft: 8 }}>Khóa</Tag>}
-                  </span>
-                }
-                description={
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{course.description?.slice(0, 80)}...</Text>
-                    <Tag style={{ marginTop: 8 }}>{course.status === 'published' ? '✅ Đã xuất bản' : course.status}</Tag>
-                  </div>
-                }
+                title={course.title}
+                description={course.description?.slice(0, 80)}
               />
+              <div style={{ marginTop: 12 }}>
+                <Tag color={course.accessType === 'free' ? 'green' : 'red'}>
+                  {course.accessType === 'free' ? 'Miễn phí' : `🔒 ${course.pointCost} điểm`}
+                </Tag>
+              </div>
             </Card>
           </Col>
         ))}
