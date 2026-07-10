@@ -8,14 +8,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Courses')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List courses' })
+  @ApiOperation({ summary: 'List courses (public)' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'pageSize', required: false })
   @ApiQuery({ name: 'subjectId', required: false })
@@ -33,20 +31,22 @@ export class CoursesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get course detail' })
+  @ApiOperation({ summary: 'Get course detail (public)' })
   async findOne(@Param('id') id: string) {
     const course = await this.coursesService.findById(id);
     return { success: true, data: course };
   }
 
   @Get(':id/chapters')
-  @ApiOperation({ summary: 'Get chapters with lessons for a course' })
+  @ApiOperation({ summary: 'Get chapters with lessons (public)' })
   async findChapters(@Param('id') id: string) {
     const data = await this.coursesService.findChaptersWithLessons(id);
     return { success: true, data };
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin', 'Maker')
   @ApiOperation({ summary: 'Create course (Maker/Admin)' })
   async create(@Body() body: { title: string; subjectId?: string; description?: string; accessType?: string; pointCost?: number }, @Request() req: any) {
@@ -55,6 +55,8 @@ export class CoursesController {
   }
 
   @Post(':id/submit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin', 'Maker')
   @ApiOperation({ summary: 'Submit course for review (Maker)' })
   async submit(@Param('id') id: string, @Request() req: any) {
@@ -63,6 +65,8 @@ export class CoursesController {
   }
 
   @Post(':id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin', 'Checker')
   @ApiOperation({ summary: 'Approve course (Checker)' })
   async approve(@Param('id') id: string, @Request() req: any) {
@@ -71,6 +75,8 @@ export class CoursesController {
   }
 
   @Post(':id/reject')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin', 'Checker')
   @ApiOperation({ summary: 'Reject course (Checker)' })
   async reject(@Param('id') id: string, @Body() body: { reason: string }, @Request() req: any) {
@@ -79,6 +85,8 @@ export class CoursesController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin', 'Maker')
   @ApiOperation({ summary: 'Update course' })
   async update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
@@ -88,6 +96,8 @@ export class CoursesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
   @Roles('Admin')
   @ApiOperation({ summary: 'Delete course' })
   async remove(@Param('id') id: string) {
