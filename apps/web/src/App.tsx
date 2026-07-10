@@ -18,6 +18,7 @@ const CourseDetailPage = lazy(() => import('./pages/courses/CourseDetailPage'));
 const LessonViewerPage = lazy(() => import('./pages/courses/LessonViewerPage'));
 const ExamsPage = lazy(() => import('./pages/exams/ExamsPage'));
 const ExamTakingPage = lazy(() => import('./pages/exams/ExamTakingPage'));
+const FlashcardStudyPage = lazy(() => import('./pages/exams/FlashcardStudyPage'));
 const AIChatPage = lazy(() => import('./pages/ai/AIChatPage'));
 const LeaderboardPage = lazy(() => import('./pages/leaderboard/LeaderboardPage'));
 const LearningPathPage = lazy(() => import('./pages/learning-path/LearningPathPage'));
@@ -75,6 +76,7 @@ function App() {
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonViewerPage />} />
           <Route path="/exams" element={<ExamsPage />} />
           <Route path="/exams/:id/take" element={<ExamTakingPage />} />
+          <Route path="/exams/flashcard/:setId" element={<FlashcardStudyPage />} />
           <Route path="/ai-chat" element={<AIChatPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/learning-paths" element={<LearningPathPage />} />

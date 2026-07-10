@@ -39,6 +39,13 @@ export class CoursesController {
     return { success: true, data: course };
   }
 
+  @Get(':id/chapters')
+  @ApiOperation({ summary: 'Get chapters with lessons for a course' })
+  async findChapters(@Param('id') id: string) {
+    const data = await this.coursesService.findChaptersWithLessons(id);
+    return { success: true, data };
+  }
+
   @Post()
   @Roles('Admin', 'Maker')
   @ApiOperation({ summary: 'Create course (Maker/Admin)' })

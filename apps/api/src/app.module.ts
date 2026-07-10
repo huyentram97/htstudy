@@ -13,6 +13,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { SystemConfigModule } from './modules/config/config.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ContentImportModule } from './modules/content-import/content-import.module';
+import { FlashcardsModule } from './modules/flashcards/flashcards.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -54,6 +55,7 @@ import { HealthModule } from './modules/health/health.module';
     SystemConfigModule,
     AuditModule,
     ContentImportModule,
+    FlashcardsModule,
   ],
 })
 export class AppModule {}

@@ -10,6 +10,30 @@ export class CoursesService {
     private readonly courseRepository: Repository<Course>,
   ) {}
 
+  async findChaptersWithLessons(courseId: string) {
+    const { rows } = await this.courseRepository.query(`
+      SELECT ch.id, ch.title, ch.description, ch.sort_order,
+        COALESCE(json_agg(
+          json_build_object('id', l.id, 'title', l.title, 'contentType', l.content_type, 'sortOrder', l.sort_order)
+          ORDER BY l.sort_order
+        ) FILTER (WHERE l.id IS NOT NULL), '[]') as lessons
+      FROM chapters ch
+      LEFT JOIN lessons l ON l.chapter_id = ch.id
+      WHERE ch.course_id = $1
+      GROUP BY ch.id, ch.title, ch.description, ch.sort_order
+      ORDER BY ch.sort_order
+    `, [courseId]);
+    return rows;
+  }
+
+  async findLessonById(lessonId: string) {
+    const rows = await this.courseRepository.query(
+      `SELECT id, title, content_type as "contentType", content, sort_order as "sortOrder" FROM lessons WHERE id = $1`,
+      [lessonId]
+    );
+    return rows[0] || null;
+  }
+
   async findAll(query: {
     page?: number;
     pageSize?: number;
